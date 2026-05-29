@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist-tests",
+    "moduleResolution": "node"
+  },
+  "include": ["src", "tests"]
+}

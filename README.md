@@ -10,30 +10,60 @@ Aplicação de gerenciamento de tarefas construída com TypeScript e Arquitetura
 
 ## Setup
 
-### Pré-requisitos
+### Com Docker (recomendado)
+
+Pré-requisito: ter o [Docker](https://www.docker.com/) instalado.
+
+```bash
+docker compose up --build
+```
+
+Isso sobe tudo automaticamente: MongoDB, backend e frontend. Não é necessário instalar Node.js, MongoDB ou qualquer outra dependência manualmente.
+
+| Serviço | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend | http://localhost:3000 |
+
+Para parar:
+```bash
+docker compose down
+```
+
+Para parar e apagar os dados do banco:
+```bash
+docker compose down -v
+```
+
+---
+
+### Sem Docker (manual)
+
+#### Pré-requisitos
 
 - Node.js 18+
-- MongoDB rodando localmente 
+- MongoDB rodando localmente
 
-### Instalação
+#### MongoDB
+
+```bash
+# Windows (como serviço)
+net start MongoDB
+
+# Mac
+brew services start mongodb-community
+
+# Linux
+sudo systemctl start mongod
+```
+
+#### Instalação
 
 ```bash
 npm install
 ```
 
-### MongoDB
-
-**Opção A — Local:**
-```bash
-mongod
-```
-
-**Opção B — Docker (recomendado):**
-```bash
-docker run -d -p 27017:27017 --name mongodb mongo:latest
-```
-
-### Variáveis de ambiente
+#### Variáveis de ambiente
 
 Crie um arquivo `.env` na raiz com:
 
@@ -44,7 +74,7 @@ JWT_SECRET=sua-chave-secreta
 NODE_ENV=development
 ```
 
-### Executar em desenvolvimento
+#### Executar em desenvolvimento
 
 Na pasta raiz para rodar o backend, e na pasta `frontend` para rodar o site:
 
@@ -52,26 +82,40 @@ Na pasta raiz para rodar o backend, e na pasta `frontend` para rodar o site:
 npm run dev
 ```
 
-### Build para produção
+---
 
-```bash
-npm run build
-node dist/index.js
-```
+## Autenticação
 
-### Gerar token JWT de teste
+A autenticação é feita com **usuário e senha**. O token JWT é gerado pelo backend e armazenado em um **cookie httpOnly** — o frontend nunca tem acesso direto ao token.
 
-```bash
-npm run generate-token
-```
+### Criar conta
+
+Acesse http://localhost:5173, clique em **Criar conta**, informe usuário e senha.
+
+### Login
+
+Na mesma tela, clique em **Entrar** e informe suas credenciais.
+
+### Endpoints de autenticação
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `POST` | `/auth/register` | Criar nova conta `{ username, password }` |
+| `POST` | `/auth/login` | Fazer login `{ username, password }` |
+| `POST` | `/auth/logout` | Encerrar sessão |
+| `GET` | `/auth/check` | Verificar se a sessão está ativa |
+
+As senhas são armazenadas com hash **bcrypt** — nunca em texto puro.
+
+---
 
 ## Testes
 
-Os UseCases são testados com **mocks** no lugar de conectar ao banco real. Isso porque o que queremos testar é a lógica de negócio(validação, autorização, regras) e não se o MongoDB salva corretamente. Com mocks os testes rodam rápido e de forma isolada. O Controller é testado via **Supertest**, que simula requisições HTTP reais sem precisar subir o servidor.
+Os UseCases são testados com **mocks** no lugar de conectar ao banco real. Isso porque o que queremos testar é a lógica de negócio (validação, autorização, regras) e não se o MongoDB salva corretamente. Com mocks os testes rodam rápido e de forma isolada. O Controller é testado via **Supertest**, que simula requisições HTTP reais sem precisar subir o servidor.
 
 ```bash
-npm test                
-npm test -- --coverage  # Relatório de cobertura
+npm test
+npm test -- --coverage
 ```
 
 **Cobertura de testes:**
@@ -86,9 +130,11 @@ npm test -- --coverage  # Relatório de cobertura
 - `UncompleteTaskUseCase` — reversão, autorização
 - `CreateBulkTasksUseCase` — lote, limite de 1000, validação
 
+---
+
 ## Endpoints da API
 
-Todas as rotas requerem autenticação JWT (`Authorization: Bearer <token>`).
+Todas as rotas de tarefas requerem autenticação via cookie de sessão.
 
 ### Tasks
 
@@ -109,6 +155,7 @@ Todas as rotas requerem autenticação JWT (`Authorization: Bearer <token>`).
 |--------|------|-----------|
 | `GET` | `/health` | Verificar status da API |
 
+---
 
 ## Estrutura de Pastas
 
@@ -122,7 +169,7 @@ src/
 │   └── index.ts
 ├── adapters/
 │   ├── database/                # Output Adapter: MongooseTaskRepository
-│   │   └── models/
+│   │   └── models/              # TaskModel.ts, UserModel.ts
 │   └── http/                    # Input Adapter: Express
 │       ├── controllers/         # TaskController (Zod + mapeamento para DTO)
 │       ├── middlewares/         # authMiddleware, globalErrorHandler

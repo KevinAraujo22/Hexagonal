@@ -1,23 +1,38 @@
 import { useState, useEffect } from 'react';
-import { api, Task, setAuthToken, getAuthToken } from './api';
+import { api, auth, Task } from './api';
 import './App.css';
+
+type AuthMode = 'login' | 'register';
 
 function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [token, setToken] = useState(getAuthToken());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
 
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
   useEffect(() => {
-    if (token) {
+    auth.check().then((authenticated) => {
+      setIsAuthenticated(authenticated);
+      setChecking(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
       loadTasks();
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   const loadTasks = async () => {
     try {
@@ -32,9 +47,23 @@ function App() {
     }
   };
 
-  const handleLogin = (testToken: string) => {
-    setAuthToken(testToken);
-    setToken(testToken);
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setAuthLoading(true);
+
+    try {
+      if (authMode === 'login') {
+        await auth.login(username, password);
+      } else {
+        await auth.register(username, password);
+      }
+      setIsAuthenticated(true);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Erro ao autenticar');
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   const handleCreateTask = async (e: React.FormEvent) => {
@@ -43,7 +72,6 @@ function App() {
       setError('Digite um título');
       return;
     }
-
     try {
       setError(null);
       const newTask = await api.createTask(title, description);
@@ -104,62 +132,72 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
-    setAuthToken('');
-    setToken('');
+  const handleLogout = async () => {
+    await auth.logout();
+    setIsAuthenticated(false);
     setTasks([]);
     setTitle('');
     setDescription('');
+    setUsername('');
+    setPassword('');
   };
 
-  if (!token) {
+  if (checking) {
+    return (
+      <div className="app">
+        <div className="login-container">
+          <p>Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return (
       <div className="app">
         <div className="login-container">
           <div className="login-box">
             <h1>📝 Gerenciador de Tarefas</h1>
-            <p>Gerenciador de Tarefas com Arquitetura Hexagonal</p>
 
-            <div className="login-instructions">
-              <h3>Para testar, você precisa de um token JWT.</h3>
-
-              <div className="step">
-                <h4>Gerar Token</h4>
-                <p>No terminal (pasta do backend), execute:</p>
-                <code>npm run generate-token</code>
-              </div>
-
-              <div className="step">
-                <h4>Cole aqui</h4>
-                <textarea
-                  placeholder="Cole o token JWT aqui..."
-                  onChange={(e) => {
-                    const testToken = e.currentTarget.value.trim();
-                    if (testToken) {
-                      handleLogin(testToken);
-                    }
-                  }}
-                  style={{ width: '100%', height: '100px', marginTop: '10px' }}
-                />
-              </div>
-
-              <div className="demo-token">
-                <p>Ou use um token de teste rápido:</p>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => {
-                    const demoToken =
-                      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ0ZXN0LXVzZXItMTIzIiwiaWF0IjoxNzc5OTgwNzQyfQ.FKOZR2LE94VdqBQz8LQW6m4YP5VaPY3qZ3lgM8l1hZ8';
-                    handleLogin(demoToken);
-                  }}
-                >
-                  Usar Token Demo
-                </button>
-                <p style={{ fontSize: '12px', color: '#666' }}>
-                  (Funciona se o backend estiver rodando)
-                </p>
-              </div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              <button
+                className={`btn ${authMode === 'login' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => { setAuthMode('login'); setError(null); }}
+              >
+                Entrar
+              </button>
+              <button
+                className={`btn ${authMode === 'register' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => { setAuthMode('register'); setError(null); }}
+              >
+                Criar conta
+              </button>
             </div>
+
+            <form onSubmit={handleAuth}>
+              <input
+                type="text"
+                placeholder="Usuário"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="input"
+                style={{ marginBottom: '10px' }}
+              />
+              <input
+                type="password"
+                placeholder="Senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input"
+                style={{ marginBottom: '10px' }}
+              />
+
+              {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
+
+              <button type="submit" className="btn btn-primary" disabled={authLoading} style={{ width: '100%' }}>
+                {authLoading ? 'Aguarde...' : authMode === 'login' ? 'Entrar' : 'Criar conta'}
+              </button>
+            </form>
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { envConfig } from '../../../infra/config/env';
 
 declare global {
   namespace Express {
@@ -9,14 +10,14 @@ declare global {
   }
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = envConfig.JWT_SECRET || 'your-secret-key-change-in-production';
 
 export function authMiddleware(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const token = req.cookies?.token;
 
   if (!token) {
     return res.status(401).json({

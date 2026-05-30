@@ -1,9 +1,8 @@
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+import { envConfig } from '../infra/config/env';
 
 export function generateTestToken(userId: string = 'test-user-123'): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign({ userId }, envConfig.JWT_SECRET!, { expiresIn: '1h' });
 }
 
 if (require.main === module) {

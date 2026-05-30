@@ -1,15 +1,16 @@
+import { envConfig } from './infra/config/env';
 import dotenv from 'dotenv';
 import { MongoDBConnection, MongooseTaskRepository, createApp } from './adapters';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/task-management';
+const PORT = envConfig.PORT || 3000;
+const MONGODB_URI = envConfig.MONGODB_URI || 'mongodb://localhost:27017/task-management';
 
 async function main() {
   try {
     console.log('Task Management API is starting...');
-    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`Environment: ${envConfig.NODE_ENV}`);
 
     await MongoDBConnection.connect(MONGODB_URI);
 

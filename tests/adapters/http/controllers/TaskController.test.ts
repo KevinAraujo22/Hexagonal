@@ -15,7 +15,7 @@ class MockTaskRepository implements ITaskRepository {
 
 const JWT_SECRET = 'your-secret-key-change-in-production';
 const userId = 'user-123';
-const validToken = `Bearer ${jwt.sign({ userId }, JWT_SECRET)}`;
+const validCookie = `token=${jwt.sign({ userId }, JWT_SECRET)}`;
 
 describe('TaskController', () => {
   let mockRepository: MockTaskRepository;
@@ -32,7 +32,7 @@ describe('TaskController', () => {
 
       const res = await request(app)
         .post('/tasks')
-        .set('Authorization', validToken)
+        .set('Cookie', validCookie)
         .send({ title: 'Minha tarefa', description: 'Descrição' });
 
       expect(res.status).toBe(201);
@@ -43,7 +43,7 @@ describe('TaskController', () => {
     it('should return 400 when title is missing (Zod validation)', async () => {
       const res = await request(app)
         .post('/tasks')
-        .set('Authorization', validToken)
+        .set('Cookie', validCookie)
         .send({ description: 'Sem título' });
 
       expect(res.status).toBe(400);
@@ -53,7 +53,7 @@ describe('TaskController', () => {
     it('should return 400 when title is empty string (Zod validation)', async () => {
       const res = await request(app)
         .post('/tasks')
-        .set('Authorization', validToken)
+        .set('Cookie', validCookie)
         .send({ title: '', description: 'Descrição' });
 
       expect(res.status).toBe(400);
@@ -75,7 +75,7 @@ describe('TaskController', () => {
 
       const res = await request(app)
         .get('/tasks/id-inexistente')
-        .set('Authorization', validToken);
+        .set('Cookie', validCookie);
 
       expect(res.status).toBe(404);
       expect(res.body).toHaveProperty('error', 'TaskNotFoundException');
@@ -87,7 +87,7 @@ describe('TaskController', () => {
 
       const res = await request(app)
         .get(`/tasks/${task.id}`)
-        .set('Authorization', validToken);
+        .set('Cookie', validCookie);
 
       expect(res.status).toBe(403);
       expect(res.body).toHaveProperty('error', 'UnauthorizedException');
@@ -99,7 +99,7 @@ describe('TaskController', () => {
 
       const res = await request(app)
         .get(`/tasks/${task.id}`)
-        .set('Authorization', validToken);
+        .set('Cookie', validCookie);
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('title', 'Tarefa');
@@ -110,7 +110,7 @@ describe('TaskController', () => {
     it('should return 400 when update payload has empty title (Zod validation)', async () => {
       const res = await request(app)
         .patch('/tasks/qualquer-id')
-        .set('Authorization', validToken)
+        .set('Cookie', validCookie)
         .send({ title: '', description: 'Ok' });
 
       expect(res.status).toBe(400);
@@ -122,7 +122,7 @@ describe('TaskController', () => {
 
       const res = await request(app)
         .patch('/tasks/id-inexistente')
-        .set('Authorization', validToken)
+        .set('Cookie', validCookie)
         .send({ title: 'Novo título', description: '' });
 
       expect(res.status).toBe(404);
@@ -137,7 +137,7 @@ describe('TaskController', () => {
 
       const res = await request(app)
         .delete(`/tasks/${task.id}`)
-        .set('Authorization', validToken);
+        .set('Cookie', validCookie);
 
       expect(res.status).toBe(204);
     });
@@ -148,7 +148,7 @@ describe('TaskController', () => {
 
       const res = await request(app)
         .delete(`/tasks/${task.id}`)
-        .set('Authorization', validToken);
+        .set('Cookie', validCookie);
 
       expect(res.status).toBe(403);
     });
@@ -158,7 +158,7 @@ describe('TaskController', () => {
     it('should return 400 when tasks array is empty (Zod validation)', async () => {
       const res = await request(app)
         .post('/tasks/bulk/create')
-        .set('Authorization', validToken)
+        .set('Cookie', validCookie)
         .send({ tasks: [] });
 
       expect(res.status).toBe(400);
@@ -169,7 +169,7 @@ describe('TaskController', () => {
 
       const res = await request(app)
         .post('/tasks/bulk/create')
-        .set('Authorization', validToken)
+        .set('Cookie', validCookie)
         .send({ tasks: [{ title: 'A' }, { title: 'B' }] });
 
       expect(res.status).toBe(201);

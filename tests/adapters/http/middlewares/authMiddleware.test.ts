@@ -9,7 +9,7 @@ describe('authMiddleware', () => {
 
   beforeEach(() => {
     req = {
-      headers: {},
+      cookies: {},
     };
     res = {
       status: jest.fn().mockReturnThis(),
@@ -31,7 +31,7 @@ describe('authMiddleware', () => {
 
   it('should extract userId from valid token', () => {
     const token = jwt.sign({ userId: 'user-123' }, 'your-secret-key-change-in-production');
-    req.headers = { authorization: `Bearer ${token}` };
+    req.cookies = { token };
 
     authMiddleware(req as Request, res as Response, next);
 
@@ -40,7 +40,7 @@ describe('authMiddleware', () => {
   });
 
   it('should return 401 for invalid token', () => {
-    req.headers = { authorization: 'Bearer invalid-token' };
+    req.cookies = { token: 'invalid-token' };
 
     authMiddleware(req as Request, res as Response, next);
 

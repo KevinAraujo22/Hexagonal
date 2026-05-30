@@ -10,8 +10,6 @@ Aplicação de gerenciamento de tarefas construída com TypeScript e Arquitetura
 
 ## Setup
 
-### Com Docker (recomendado)
-
 Pré-requisito: ter o [Docker](https://www.docker.com/) instalado.
 
 ```bash
@@ -33,53 +31,6 @@ docker compose down
 Para parar e apagar os dados do banco:
 ```bash
 docker compose down -v
-```
-
----
-
-### Sem Docker (manual)
-
-#### Pré-requisitos
-
-- Node.js 18+
-- MongoDB rodando localmente
-
-#### MongoDB
-
-```bash
-# Windows (como serviço)
-net start MongoDB
-
-# Mac
-brew services start mongodb-community
-
-# Linux
-sudo systemctl start mongod
-```
-
-#### Instalação
-
-```bash
-npm install
-```
-
-#### Variáveis de ambiente
-
-Crie um arquivo `.env` na raiz com:
-
-```env
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/task-management
-JWT_SECRET=sua-chave-secreta
-NODE_ENV=development
-```
-
-#### Executar em desenvolvimento
-
-Na pasta raiz para rodar o backend, e na pasta `frontend` para rodar o site:
-
-```bash
-npm run dev
 ```
 
 ---
